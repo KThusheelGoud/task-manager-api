@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager Pro</title>
+    <style>
+        :root { --primary: #4F46E5; --bg: #F3F4F6; --text: #1F2937; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #D1D5DB; border-radius: 5px; box-sizing: border-box; }
+        button { background-color: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px;}
+        button:hover { opacity: 0.9; }
+        .danger-btn { background-color: #EF4444; width: auto; float: right; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .stat-box { background: #E5E7EB; padding: 15px; text-align: center; border-radius: 8px; font-size: 20px; font-weight: bold; }
+        .admin-only { display: none; border-left: 4px solid var(--primary); padding-left: 15px; }
+        .hidden { display: none; }
+        h1, h2, h3 { margin-top: 0; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; color: white; background: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- AUTHENTICATION SECTION -->
+    <div id="authSection" class="card">
+        <h1 align="center">Task Manager System</h1>
+        <div style="display: flex; gap: 20px;">
+            <!-- Login -->
+            <div style="flex: 1;">
+                <h3>Sign In</h3>
+                <input type="text" id="loginUser" placeholder="Username" value="admin_boss">
+                <input type="password" id="loginPass" placeholder="Password" value="password123">
+                <button onclick="login()">Login</button>
+            </div>
+            <!-- Signup -->
+            <div style="flex: 1; border-left: 1px solid #ccc; padding-left: 20px;">
+                <h3>Register New User</h3>
+                <input type="text" id="regUser" placeholder="Username">
+                <input type="password" id="regPass" placeholder="Password">
+                <select id="regRole">
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <button onclick="signup()" style="background-color: #10B981;">Sign Up</button>
+            </div>
+        </div>
+        <p id="authMsg" style="color: red; text-align: center; margin-top: 15px;"></p>
+    </div>
+
+    <!-- MAIN APP SECTION (Hidden until logged in) -->
+    <div id="appSection" class="hidden">
+        
+        <div class="card">
+            <button class="danger-btn" onclick="logout()">Logout</button>
+            <h2>Welcome, <span id="userNameDisplay" style="color: var(--primary);"></span>! <span id="userRoleBadge" class="badge"></span></h2>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="card">
+            <h3>📊 Live Dashboard</h3>
+            <div class="grid-3">
+                <div class="stat-box" style="color: #4B5563;">Total Tasks: <br><span id="statTotal">0</span></div>
+                <div class="stat-box" style="color: #D97706;">TODO / In Progress: <br><span id="statActive">0</span></div>
+                <div class="stat-box" style="color: #059669;">Completed: <br><span id="statDone">0</span></div>
+            </div>
+        </div>
+
+        <!-- Admin Only Controls -->
+        <div class="card admin-only">
+            <h3>👑 Admin Controls</h3>
+            <div style="display: flex; gap: 20px;">
+                <!-- Create Project -->
+                <div style="flex: 1;">
+                    <h4>Create Project</h4>
+                    <input type="text" id="projName" placeholder="Project Name">
+                    <input type="text" id="projDesc" placeholder="Description">
+                    <button onclick="createProject()">Create Project</button>
+                </div>
+                <!-- Assign Task -->
+                <div style="flex: 1;">
+                    <h4>Assign Task</h4>
+                    <input type="number" id="taskProjId" placeholder="Project ID (e.g., 1)">
+                    <input type="number" id="taskUserId" placeholder="Assignee User ID (e.g., 2)">
+                    <input type="text" id="taskTitle" placeholder="Task Title">
+                    <button onclick="assignTask()">Assign Task</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shared Controls -->
+        <div class="card">
+            <h3>✅ Update Task Status</h3>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="updateTaskId" placeholder="Task ID" style="flex: 1;">
+                <select id="updateStatus" style="flex: 1;">
+                    <option value="TODO">TODO</option>
+                    <option value="IN_PROGRESS">IN_PROGRESS</option>
+                    <option value="DONE">DONE</option>
+                </select>
+                <button onclick="updateTaskStatus()" style="flex: 1;">Update Status</button>
+            </div>
+        </div>
+
+        <!-- Project List -->
+        <div class="card">
+            <h3>📁 All Projects <button onclick="loadProjects()" style="width: auto; padding: 5px 10px; float: right;">Refresh</button></h3>
+            <pre id="projectList" style="background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto;">Load projects to see data...</pre>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api';
+
+    // Helper: Make API Calls with JWT
+    async function fetchWithAuth(endpoint, method = 'GET', body = null) {
+        const token = localStorage.getItem('jwt');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        
+        const options = { method, headers };
+        if (body) options.body = JSON.stringify(body);
+        
+        const res = await fetch(API_URL + endpoint, options);
+        if (!res.ok) throw new Error(await res.text());
+        
+        const text = await res.text();
+        if (!text) return {};
+        
+        // Try to parse JSON. If it fails (because Spring sent plain text), just return the text!
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            return text;
+        }
+    }
+
+    // --- AUTHENTICATION ---
+    async function signup() {
+        try {
+            await fetchWithAuth('/auth/signup', 'POST', {
+                username: document.getElementById('regUser').value,
+                password: document.getElementById('regPass').value,
+                role: document.getElementById('regRole').value
+            });
+            alert("User registered! You can now log in.");
+        } catch (e) { document.getElementById('authMsg').innerText = e.message; }
+    }
+
+    async function login() {
+        try {
+            const data = await fetchWithAuth('/auth/signin', 'POST', {
+                username: document.getElementById('loginUser').value,
+                password: document.getElementById('loginPass').value
+            });
+            localStorage.setItem('jwt', data.token);
+            localStorage.setItem('role', data.role);
+            localStorage.setItem('username', data.username);
+            checkAuth();
+        } catch (e) { document.getElementById('authMsg').innerText = "Login Failed: Check credentials or CORS."; }
+    }
+
+    function logout() {
+        localStorage.clear();
+        checkAuth();
+    }
+
+    function checkAuth() {
+        const token = localStorage.getItem('jwt');
+        if (token) {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('appSection').classList.remove('hidden');
+            document.getElementById('userNameDisplay').innerText = localStorage.getItem('username');
+            document.getElementById('userRoleBadge').innerText = localStorage.getItem('role');
+            
+            // Show Admin controls if Admin
+            const adminControls = document.querySelectorAll('.admin-only');
+            if (localStorage.getItem('role') === 'ROLE_ADMIN') {
+                adminControls.forEach(el => el.style.display = 'block');
+            } else {
+                adminControls.forEach(el => el.style.display = 'none');
+            }
+
+            refreshData();
+        } else {
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('appSection').classList.add('hidden');
+        }
+    }
+
+    // --- DATA FUNCTIONS ---
+    async function refreshData() {
+        try {
+            // Load Dashboard
+            const stats = await fetchWithAuth('/tasks/dashboard');
+            document.getElementById('statTotal').innerText = stats.totalTasks || 0;
+            document.getElementById('statActive').innerText = (stats.todo || 0) + (stats.inProgress || 0);
+            document.getElementById('statDone').innerText = stats.done || 0;
+            
+            // Load Projects
+            loadProjects();
+        } catch (e) { console.error("Error loading dashboard", e); }
+    }
+
+    async function loadProjects() {
+        try {
+            const projects = await fetchWithAuth('/projects');
+            document.getElementById('projectList').innerText = JSON.stringify(projects, null, 2);
+        } catch (e) { alert("Failed to load projects. " + e.message); }
+    }
+
+    async function createProject() {
+        try {
+            await fetchWithAuth('/projects', 'POST', {
+                name: document.getElementById('projName').value,
+                description: document.getElementById('projDesc').value
+            });
+            alert("Project Created!");
+            refreshData();
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
+    async function assignTask() {
+        const projId = document.getElementById('taskProjId').value;
+        const userId = document.getElementById('taskUserId').value;
+        try {
+            await fetchWithAuth(`/tasks/project/${projId}/assign/${userId}`, 'POST', {
+                title: document.getElementById('taskTitle').value,
+                dueDate: "2026-12-31"
+            });
+            alert("Task Assigned!");
+            refreshData();
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
+    async function updateTaskStatus() {
+        const taskId = document.getElementById('updateTaskId').value;
+        const status = document.getElementById('updateStatus').value;
+        try {
+            await fetchWithAuth(`/tasks/${taskId}/status?status=${status}`, 'PATCH');
+            alert("Status Updated!");
+            refreshData();
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
+    // Init
+    checkAuth();
+</script>
+</body>
+</html>
