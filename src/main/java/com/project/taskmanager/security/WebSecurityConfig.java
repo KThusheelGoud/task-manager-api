@@ -16,7 +16,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+// import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -41,11 +41,21 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Uses patterns to avoid the "Wildcard vs Credentials" conflict
-        config.setAllowedOriginPatterns(List.of("http://127.0.0.1:5500", "http://localhost:5500"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        // 1. List origins EXPLICITLY to avoid the "*" vs allowCredentials conflict
+        config.setAllowedOrigins(java.util.List.of("http://127.0.0.1:5500", "http://localhost:5500"));
+        
+        // 2. Allow all necessary HTTP methods
+        config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        
+        // 3. Allow all headers for JWT transmission
+        config.setAllowedHeaders(java.util.List.of("*"));
+        
+        // 4. MUST be true for the frontend to send/receive tokens
         config.setAllowCredentials(true);
+        
+        // 5. Explicitly expose the Authorization header
+        config.setExposedHeaders(java.util.List.of("Authorization"));
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
