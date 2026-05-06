@@ -54,12 +54,13 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Disable CSRF (Required for REST APIs)
+            // 1. Disable CSRF (Must do this for POST requests to work)
             .csrf(csrf -> csrf.disable())
             
-            // 2. Enable CORS with the new policy
+            // 2. Configure CORS
             .cors(cors -> cors.configurationSource(request -> {
                 var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
+                // Allow your local VS Code Live Server
                 corsConfiguration.setAllowedOrigins(java.util.List.of("http://127.0.0.1:5500", "http://localhost:5500"));
                 corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
@@ -67,9 +68,9 @@ public class WebSecurityConfig {
                 return corsConfiguration;
             }))
             
-            // 3. Open the gates for Auth endpoints
+            // 3. Set Permissions
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // This allows signup/login
+                .requestMatchers("/api/auth/**").permitAll() // Open the signup/login doors
                 .anyRequest().authenticated()
             );
         
