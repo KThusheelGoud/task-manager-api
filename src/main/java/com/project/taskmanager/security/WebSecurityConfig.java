@@ -54,23 +54,22 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Disable CSRF (Must do this for POST requests to work)
+            // 1. Completely disable CSRF for REST APIs
             .csrf(csrf -> csrf.disable())
             
-            // 2. Configure CORS
+            // 2. Force open CORS for your local testing environment
             .cors(cors -> cors.configurationSource(request -> {
-                var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                // Allow your local VS Code Live Server
-                corsConfiguration.setAllowedOrigins(java.util.List.of("http://127.0.0.1:5500", "http://localhost:5500"));
-                corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
-                corsConfiguration.setAllowCredentials(true);
-                return corsConfiguration;
+                var config = new org.springframework.web.cors.CorsConfiguration();
+                config.setAllowedOrigins(java.util.List.of("http://127.0.0.1:5500", "http://localhost:5500"));
+                config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(java.util.List.of("*"));
+                config.setAllowCredentials(true);
+                return config;
             }))
             
-            // 3. Set Permissions
+            // 3. Explicitly permit the Auth endpoints
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // Open the signup/login doors
+                .requestMatchers("/api/auth/**").permitAll() 
                 .anyRequest().authenticated()
             );
         
