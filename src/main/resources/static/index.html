@@ -121,23 +121,27 @@
     async function fetchWithAuth(endpoint, method = 'GET', body = null) {
         const token = localStorage.getItem('jwt');
         const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
+        
+        // Crucial: Must be "Bearer " + token
+        if (token && token !== "undefined") {
+            headers['Authorization'] = `Bearer ${token}`; 
+        }
         
         const options = { method, headers };
         if (body) options.body = JSON.stringify(body);
         
         const res = await fetch(API_URL + endpoint, options);
+        
+        // If we get a 403, it means our token was rejected
+        if (res.status === 403) {
+            console.warn("Access Denied (403): Token might be invalid or expired.");
+        }
+        
         if (!res.ok) throw new Error(await res.text());
         
         const text = await res.text();
         if (!text) return {};
-        
-        // Try to parse JSON. If it fails (because Spring sent plain text), just return the text!
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            return text;
-        }
+        try { return JSON.parse(text); } catch (e) { return text; }
     }
 
     // --- AUTHENTICATION ---
@@ -158,11 +162,25 @@
                 username: document.getElementById('loginUser').value,
                 password: document.getElementById('loginPass').value
             });
-            localStorage.setItem('jwt', data.token);
-            localStorage.setItem('role', data.role);
-            localStorage.setItem('username', data.username);
-            checkAuth();
-        } catch (e) { document.getElementById('authMsg').innerText = "Login Failed: Check credentials or CORS."; }
+            
+            // Debug: See exactly what the server is sending
+            console.log("Login Response Data:", data);
+
+            // Try both 'token' and 'accessToken' to be safe
+            const token = data.token || data.accessToken;
+            
+            if (token) {
+                localStorage.setItem('jwt', token);
+                localStorage.setItem('role', data.role);
+                localStorage.setItem('username', data.username);
+                checkAuth();
+            } else {
+                throw new Error("Token missing in server response");
+            }
+        } catch (e) { 
+            console.error(e);
+            document.getElementById('authMsg').innerText = "Login Failed: " + e.message; 
+        }
     }
 
     function logout() {
