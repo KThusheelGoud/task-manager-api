@@ -42,7 +42,7 @@ public class WebSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         // 1. List origins EXPLICITLY to avoid the "*" vs allowCredentials conflict
-        config.setAllowedOrigins(java.util.List.of("http://127.0.0.1:5500", "http://localhost:5500"));
+        config.setAllowedOrigins(java.util.List.of("http://127.0.0.1:5500", "http://localhost:5500","https://kthusheelgoud.github.io/task-manager-client/"));
         
         // 2. Allow all necessary HTTP methods
         config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
