@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -38,14 +39,17 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // 👇 1. THE MAGIC CORS BEAN
+    // 1. CONSOLIDATED CORS CONFIGURATION
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*")); // Allow any frontend
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")); // Allow all actions
-        configuration.setAllowedHeaders(Arrays.asList("*")); // Allow all headers
+        // Allows both local development and common patterns
+        configuration.setAllowedOrigins(List.of("http://127.0.0.1:5500", "http://localhost:5500"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -54,24 +58,23 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Completely disable CSRF for REST APIs
+            // 2. DISABLE CSRF (Required for REST APIs)
             .csrf(csrf -> csrf.disable())
             
-            // 2. Force open CORS for your local testing environment
-            .cors(cors -> cors.configurationSource(request -> {
-                var config = new org.springframework.web.cors.CorsConfiguration();
-                config.setAllowedOrigins(java.util.List.of("http://127.0.0.1:5500", "http://localhost:5500"));
-                config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                config.setAllowedHeaders(java.util.List.of("*"));
-                config.setAllowCredentials(true);
-                return config;
-            }))
+            // 3. APPLY CORS BEAN
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
-            // 3. Explicitly permit the Auth endpoints
+            // 4. SET SESSION TO STATELESS (Standard for JWT)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
+            // 5. PERMIT AUTH ENDPOINTS
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() 
                 .anyRequest().authenticated()
             );
+
+        // 6. ADD JWT FILTER
+        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }
