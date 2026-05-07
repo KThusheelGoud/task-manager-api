@@ -3,112 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Manager Pro</title>
+    <title>Task Manager Pro | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #4F46E5; --bg: #F3F4F6; --text: #1F2937; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #D1D5DB; border-radius: 5px; box-sizing: border-box; }
-        button { background-color: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px;}
-        button:hover { opacity: 0.9; }
-        .danger-btn { background-color: #EF4444; width: auto; float: right; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .stat-box { background: #E5E7EB; padding: 15px; text-align: center; border-radius: 8px; font-size: 20px; font-weight: bold; }
-        .admin-only { display: none; border-left: 4px solid var(--primary); padding-left: 15px; }
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+
+        /* Typography */
+        h1, h2, h3 { font-weight: 700; margin-top: 0; color: var(--text-main); }
+        .text-muted { color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+        }
+
+        /* Forms */
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 10px 0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #f1f5f9;
+            font-size: 1rem;
+        }
+
+        input:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+
+        /* Buttons */
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover { background-color: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+        .secondary-btn { background-color: #94a3b8; }
+        .danger-btn { background-color: var(--danger); width: auto; float: right; padding: 8px 16px; font-size: 0.85rem; }
+
+        /* Dashboard Stats */
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        
+        .stat-box {
+            padding: 20px;
+            text-align: left;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .stat-box span { font-size: 2rem; display: block; margin-top: 5px; }
+
+        /* Helper Classes */
+        .admin-only { display: none; border-top: 4px solid var(--primary); }
         .hidden { display: none; }
-        h1, h2, h3 { margin-top: 0; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; color: white; background: var(--primary); }
+        .flex { display: flex; gap: 20px; align-items: flex-start; }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            background: #e0e7ff;
+            color: var(--primary);
+        }
+
+        /* Project Cards Rendering */
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 15px; }
+        .project-item {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     
-    <!-- AUTHENTICATION SECTION -->
     <div id="authSection" class="card">
-        <h1 align="center">Task Manager System</h1>
-        <div style="display: flex; gap: 20px;">
-            <!-- Login -->
-            <div style="flex: 1;">
-                <h3>Sign In</h3>
+        <h1 style="text-align: center; margin-bottom: 30px; font-size: 2rem;">⚡ TaskManager <span style="color: var(--primary);">Pro</span></h1>
+        <div class="flex" style="flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <h3>Welcome Back</h3>
+                <p class="text-muted">Sign in to manage your workstation.</p>
                 <input type="text" id="loginUser" placeholder="Username" value="admin_boss">
                 <input type="password" id="loginPass" placeholder="Password" value="password123">
-                <button onclick="login()">Login</button>
+                <button onclick="login()">Access System</button>
             </div>
-            <!-- Signup -->
-            <div style="flex: 1; border-left: 1px solid #ccc; padding-left: 20px;">
-                <h3>Register New User</h3>
-                <input type="text" id="regUser" placeholder="Username">
-                <input type="password" id="regPass" placeholder="Password">
+            <div style="flex: 1; min-width: 300px; border-left: 1px solid var(--border); padding-left: 20px;">
+                <h3>Join the Team</h3>
+                <p class="text-muted">Register a new collaborator account.</p>
+                <input type="text" id="regUser" placeholder="Choose Username">
+                <input type="password" id="regPass" placeholder="Set Password">
                 <select id="regRole">
-                    <option value="member">Member</option>
-                    <option value="admin">Admin</option>
+                    <option value="member">Role: Member</option>
+                    <option value="admin">Role: Admin</option>
                 </select>
-                <button onclick="signup()" style="background-color: #10B981;">Sign Up</button>
+                <button onclick="signup()" style="background-color: var(--success);">Create Account</button>
             </div>
         </div>
-        <p id="authMsg" style="color: red; text-align: center; margin-top: 15px;"></p>
+        <p id="authMsg" style="color: var(--danger); text-align: center; margin-top: 15px; font-weight: 600;"></p>
     </div>
 
-    <!-- MAIN APP SECTION (Hidden until logged in) -->
     <div id="appSection" class="hidden">
         
-        <div class="card">
-            <button class="danger-btn" onclick="logout()">Logout</button>
-            <h2>Welcome, <span id="userNameDisplay" style="color: var(--primary);"></span>! <span id="userRoleBadge" class="badge"></span></h2>
+        <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 45px; height: 45px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">U</div>
+                <div>
+                    <h2 style="margin: 0; font-size: 1.2rem;">Hello, <span id="userNameDisplay" style="color: var(--primary);"></span></h2>
+                    <span id="userRoleBadge" class="badge"></span>
+                </div>
+            </div>
+            <button class="danger-btn" onclick="logout()">Terminate Session</button>
         </div>
 
-        <!-- Dashboard -->
         <div class="card">
-            <h3>📊 Live Dashboard</h3>
+            <h3 style="margin-bottom: 20px;">🚀 Operations Overview</h3>
             <div class="grid-3">
-                <div class="stat-box" style="color: #4B5563;">Total Tasks: <br><span id="statTotal">0</span></div>
-                <div class="stat-box" style="color: #D97706;">TODO / In Progress: <br><span id="statActive">0</span></div>
-                <div class="stat-box" style="color: #059669;">Completed: <br><span id="statDone">0</span></div>
+                <div class="stat-box" style="background: #eff6ff; border-color: #bfdbfe;">
+                    <b style="color: #1d4ed8;">Total Assets</b>
+                    <span id="statTotal" style="color: #1e40af;">0</span>
+                </div>
+                <div class="stat-box" style="background: #fffbeb; border-color: #fef3c7;">
+                    <b style="color: #b45309;">Active Sprints</b>
+                    <span id="statActive" style="color: #92400e;">0</span>
+                </div>
+                <div class="stat-box" style="background: #ecfdf5; border-color: #d1fae5;">
+                    <b style="color: #047857;">Goal Accomplished</b>
+                    <span id="statDone" style="color: #065f46;">0</span>
+                </div>
             </div>
         </div>
 
-        <!-- Admin Only Controls -->
         <div class="card admin-only">
-            <h3>👑 Admin Controls</h3>
-            <div style="display: flex; gap: 20px;">
-                <!-- Create Project -->
-                <div style="flex: 1;">
-                    <h4>Create Project</h4>
-                    <input type="text" id="projName" placeholder="Project Name">
-                    <input type="text" id="projDesc" placeholder="Description">
-                    <button onclick="createProject()">Create Project</button>
+            <h3 style="color: var(--primary);">🛠 Management Console</h3>
+            <div class="flex" style="flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px;">
+                    <h4 style="margin-bottom: 10px;">Initialize Project</h4>
+                    <input type="text" id="projName" placeholder="Project Identifier">
+                    <input type="text" id="projDesc" placeholder="Brief Scope">
+                    <button onclick="createProject()">Launch Project</button>
                 </div>
-                <!-- Assign Task -->
-                <div style="flex: 1;">
-                    <h4>Assign Task</h4>
-                    <input type="number" id="taskProjId" placeholder="Project ID (e.g., 1)">
-                    <input type="number" id="taskUserId" placeholder="Assignee User ID (e.g., 2)">
+                <div style="flex: 1; min-width: 250px;">
+                    <h4 style="margin-bottom: 10px;">Deployment</h4>
+                    <input type="number" id="taskProjId" placeholder="Project ID">
+                    <input type="number" id="taskUserId" placeholder="User ID">
                     <input type="text" id="taskTitle" placeholder="Task Title">
-                    <button onclick="assignTask()">Assign Task</button>
+                    <button onclick="assignTask()" style="background-color: var(--warning);">Assign Unit</button>
                 </div>
             </div>
         </div>
 
-        <!-- Shared Controls -->
         <div class="card">
-            <h3>✅ Update Task Status</h3>
-            <div style="display: flex; gap: 10px;">
-                <input type="number" id="updateTaskId" placeholder="Task ID" style="flex: 1;">
-                <select id="updateStatus" style="flex: 1;">
-                    <option value="TODO">TODO</option>
-                    <option value="IN_PROGRESS">IN_PROGRESS</option>
-                    <option value="DONE">DONE</option>
+            <h3>🔄 Status Update</h3>
+            <div class="flex" style="align-items: center; flex-wrap: wrap;">
+                <input type="number" id="updateTaskId" placeholder="Task Unit ID" style="flex: 1; min-width: 150px;">
+                <select id="updateStatus" style="flex: 1; min-width: 150px;">
+                    <option value="TODO">TO-DO</option>
+                    <option value="IN_PROGRESS">ACTIVE</option>
+                    <option value="DONE">RESOLVED</option>
                 </select>
-                <button onclick="updateTaskStatus()" style="flex: 1;">Update Status</button>
+                <button onclick="updateTaskStatus()" style="flex: 1; min-width: 150px;">Commit Change</button>
             </div>
         </div>
 
-        <!-- Project List -->
         <div class="card">
-            <h3>📁 All Projects <button onclick="loadProjects()" style="width: auto; padding: 5px 10px; float: right;">Refresh</button></h3>
-            <pre id="projectList" style="background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto;">Load projects to see data...</pre>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>📂 Repository Explorer</h3>
+                <button onclick="loadProjects()" class="secondary-btn" style="width: auto; margin: 0; padding: 8px 16px;">Refresh Sync</button>
+            </div>
+            <div id="projectList" class="project-grid">
+                </div>
         </div>
 
     </div>
@@ -117,34 +222,22 @@
 <script>
     const API_URL = 'https://task-manager-api-production-c950.up.railway.app/api';
 
-    // Helper: Make API Calls with JWT
     async function fetchWithAuth(endpoint, method = 'GET', body = null) {
         const token = localStorage.getItem('jwt');
         const headers = { 'Content-Type': 'application/json' };
-        
-        // Crucial: Must be "Bearer " + token
         if (token && token !== "undefined") {
             headers['Authorization'] = `Bearer ${token}`; 
         }
-        
         const options = { method, headers };
         if (body) options.body = JSON.stringify(body);
-        
         const res = await fetch(API_URL + endpoint, options);
-        
-        // If we get a 403, it means our token was rejected
-        if (res.status === 403) {
-            console.warn("Access Denied (403): Token might be invalid or expired.");
-        }
-        
+        if (res.status === 403) console.warn("403: Invalid Token.");
         if (!res.ok) throw new Error(await res.text());
-        
         const text = await res.text();
         if (!text) return {};
         try { return JSON.parse(text); } catch (e) { return text; }
     }
 
-    // --- AUTHENTICATION ---
     async function signup() {
         try {
             await fetchWithAuth('/auth/signup', 'POST', {
@@ -152,7 +245,7 @@
                 password: document.getElementById('regPass').value,
                 role: document.getElementById('regRole').value
             });
-            alert("User registered! You can now log in.");
+            alert("Success: Account Activated.");
         } catch (e) { document.getElementById('authMsg').innerText = e.message; }
     }
 
@@ -162,31 +255,17 @@
                 username: document.getElementById('loginUser').value,
                 password: document.getElementById('loginPass').value
             });
-            
-            // Debug: See exactly what the server is sending
-            console.log("Login Response Data:", data);
-
-            // Try both 'token' and 'accessToken' to be safe
             const token = data.token || data.accessToken;
-            
             if (token) {
                 localStorage.setItem('jwt', token);
                 localStorage.setItem('role', data.role);
                 localStorage.setItem('username', data.username);
                 checkAuth();
-            } else {
-                throw new Error("Token missing in server response");
-            }
-        } catch (e) { 
-            console.error(e);
-            document.getElementById('authMsg').innerText = "Login Failed: " + e.message; 
-        }
+            } else { throw new Error("Token failure."); }
+        } catch (e) { document.getElementById('authMsg').innerText = "Access Denied: Validation failed."; }
     }
 
-    function logout() {
-        localStorage.clear();
-        checkAuth();
-    }
+    function logout() { localStorage.clear(); checkAuth(); }
 
     function checkAuth() {
         const token = localStorage.getItem('jwt');
@@ -194,16 +273,14 @@
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('appSection').classList.remove('hidden');
             document.getElementById('userNameDisplay').innerText = localStorage.getItem('username');
-            document.getElementById('userRoleBadge').innerText = localStorage.getItem('role');
+            document.getElementById('userRoleBadge').innerText = localStorage.getItem('role').replace('ROLE_', '');
             
-            // Show Admin controls if Admin
             const adminControls = document.querySelectorAll('.admin-only');
             if (localStorage.getItem('role') === 'ROLE_ADMIN') {
                 adminControls.forEach(el => el.style.display = 'block');
             } else {
                 adminControls.forEach(el => el.style.display = 'none');
             }
-
             refreshData();
         } else {
             document.getElementById('authSection').classList.remove('hidden');
@@ -211,36 +288,45 @@
         }
     }
 
-    // --- DATA FUNCTIONS ---
     async function refreshData() {
         try {
-            // Load Dashboard
             const stats = await fetchWithAuth('/tasks/dashboard');
             document.getElementById('statTotal').innerText = stats.totalTasks || 0;
             document.getElementById('statActive').innerText = (stats.todo || 0) + (stats.inProgress || 0);
             document.getElementById('statDone').innerText = stats.done || 0;
-            
-            // Load Projects
             loadProjects();
-        } catch (e) { console.error("Error loading dashboard", e); }
+        } catch (e) { console.error("Sync Error", e); }
     }
 
     async function loadProjects() {
         try {
             const projects = await fetchWithAuth('/projects');
-            document.getElementById('projectList').innerText = JSON.stringify(projects, null, 2);
-        } catch (e) { alert("Failed to load projects. " + e.message); }
+            const container = document.getElementById('projectList');
+            container.innerHTML = '';
+            
+            if (Array.isArray(projects)) {
+                projects.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'project-item';
+                    div.innerHTML = `<strong>ID: ${p.id}</strong><br><b>${p.name}</b><p class="text-muted" style="margin:5px 0">${p.description}</p>`;
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = `<p class="text-muted">No data retrieved.</p>`;
+            }
+        } catch (e) { console.error("Loader failed", e); }
     }
 
+    // Remaining functions (createProject, assignTask, updateTaskStatus) same as original logic
     async function createProject() {
         try {
             await fetchWithAuth('/projects', 'POST', {
                 name: document.getElementById('projName').value,
                 description: document.getElementById('projDesc').value
             });
-            alert("Project Created!");
+            alert("Project Launched!");
             refreshData();
-        } catch (e) { alert("Error: " + e.message); }
+        } catch (e) { alert(e.message); }
     }
 
     async function assignTask() {
@@ -251,9 +337,9 @@
                 title: document.getElementById('taskTitle').value,
                 dueDate: "2026-12-31"
             });
-            alert("Task Assigned!");
+            alert("Unit Deployed!");
             refreshData();
-        } catch (e) { alert("Error: " + e.message); }
+        } catch (e) { alert(e.message); }
     }
 
     async function updateTaskStatus() {
@@ -261,12 +347,11 @@
         const status = document.getElementById('updateStatus').value;
         try {
             await fetchWithAuth(`/tasks/${taskId}/status?status=${status}`, 'PATCH');
-            alert("Status Updated!");
+            alert("Commit Successful!");
             refreshData();
-        } catch (e) { alert("Error: " + e.message); }
+        } catch (e) { alert(e.message); }
     }
 
-    // Init
     checkAuth();
 </script>
 </body>
